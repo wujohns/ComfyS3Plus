@@ -19,7 +19,7 @@ class LoadImageS3:
                     {"image": (sorted(files), {"image_upload": False})},
                 }
     
-    CATEGORY = "ComfyS3"
+    CATEGORY = "ComfyS3Plus"
     RETURN_TYPES = ("IMAGE", "MASK")
     FUNCTION = "load_image"
     

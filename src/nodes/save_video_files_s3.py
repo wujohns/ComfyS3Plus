@@ -21,7 +21,7 @@ class SaveVideoFilesS3:
     FUNCTION = "save_video_files"
     OUTPUT_NODE = True
     OUTPUT_IS_LIST = (True,)
-    CATEGORY = "ComfyS3"
+    CATEGORY = "ComfyS3Plus"
 
     def save_video_files(self, filenames, filename_prefix="VideoFiles"):
         filename_prefix += self.prefix_append

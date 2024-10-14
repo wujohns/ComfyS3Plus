@@ -15,7 +15,7 @@ class UploadFileS3:
             }
         }
 
-    CATEGORY = "ComfyS3"
+    CATEGORY = "ComfyS3Plus"
     INPUT_NODE = True
     OUTPUT_NODE = True
     RETURN_TYPES = ("STRING",)
