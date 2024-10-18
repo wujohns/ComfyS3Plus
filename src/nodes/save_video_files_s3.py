@@ -56,4 +56,4 @@ class SaveVideoFilesS3:
                 os.remove(path)
     
         
-        return { "ui": { "audios": results }, "result": (s3_video_paths, ) }
+        return { "ui": { "videos": results }, "result": (s3_video_paths, ) }
