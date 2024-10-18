@@ -7,6 +7,7 @@ S3_INSTANCE = get_s3_instance()
 class SaveVideoFilesS3:
     def __init__(self):
         self.s3_output_dir = os.getenv("S3_OUTPUT_DIR")
+        self.type = "output"
         self.prefix_append = ""
 
     @classmethod
@@ -26,7 +27,9 @@ class SaveVideoFilesS3:
     def save_video_files(self, filenames, filename_prefix="VideoFiles"):
         filename_prefix += self.prefix_append
         local_files = filenames[1]
-        full_output_folder, filename, counter, _, filename_prefix = S3_INSTANCE.get_save_path(filename_prefix)
+        full_output_folder, filename, counter, subfolder, filename_prefix = S3_INSTANCE.get_save_path(filename_prefix)
+
+        results = list()
         s3_video_paths = list()
         
         for path in local_files:
@@ -40,5 +43,17 @@ class SaveVideoFilesS3:
               
             # Add the s3 path to the s3_image_paths list
             s3_video_paths.append(file_path)
+
+            results.append({
+                "filename": file,
+                "subfolder": subfolder,
+                "type": self.type
+            })
+            counter += 1
+
+            # delete file
+            if path and os.path.exists(path):
+                os.remove(path)
+    
         
-        return (s3_video_paths,)
+        return { "ui": { "audios": results }, "result": (s3_video_paths, ) }
