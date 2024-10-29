@@ -2,31 +2,41 @@ import os
 import json
 import tempfile
 import numpy as np
+import time
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 from comfy.cli_args import args
 
-from ..client_s3 import get_s3_instance
-S3_INSTANCE = get_s3_instance()
-
+from ..client_s3 import get_s3_instance_plus
 
 class SaveImageS3:
     def __init__(self):
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
         self.temp_dir = os.path.join(base_dir, "temp/")
-        self.s3_output_dir = os.getenv("S3_OUTPUT_DIR")
         self.type = "output"
         self.prefix_append = ""
         self.compress_level = 4
 
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {
-            "images": ("IMAGE", ),
-            "filename_prefix": ("STRING", {"default": "Image"})},
-            "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"
+        return {
+            "required": {
+                # 功能参数相关
+                "images": ("IMAGE", ),
+                "filename_prefix": ("STRING", {"default": "Image"}),
+
+                # s3 存储相关
+                "version": ("STRING", ),
+                "region": ("STRING", ),
+                "access_key": ("STRING", ),
+                "secret_key": ("STRING", ),
+                "bucket_name": ("STRING", ),
+                "endpoint_url": ("STRING", ),
+                "input_dir": ("STRING", ),
+                "output_dir": ("STRING", )
             },
-                }
+            "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
+        }
 
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("s3_image_paths",)
@@ -35,8 +45,31 @@ class SaveImageS3:
     OUTPUT_IS_LIST = (True,)
     CATEGORY = "ComfyS3Plus"
 
-    def save_images(self, images, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None):
-        filename_prefix += self.prefix_append
+    def save_images(
+        # base param
+        self,
+        images,
+        filename_prefix,
+
+        # s3 存储相关
+        version, region, access_key, secret_key, bucket_name,
+        endpoint_url, input_dir, output_dir,
+
+        # hidden param
+        prompt=None,
+        extra_pnginfo=None
+    ):
+        S3_INSTANCE = get_s3_instance_plus(
+            version=version,
+            region=region,
+            access_key=access_key,
+            secret_key=secret_key,
+            bucket_name=bucket_name,
+            endpoint_url=endpoint_url,
+            input_dir=input_dir,
+            output_dir=output_dir
+        )
+        filename_prefix += f"{ self.prefix_append }{ int(round(time.time() * 1000)) }"
         full_output_folder, filename, counter, subfolder, filename_prefix = S3_INSTANCE.get_save_path(filename_prefix, images[0].shape[1], images[0].shape[0])
         results = list()
         s3_image_paths = list()

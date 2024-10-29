@@ -1,21 +1,33 @@
 import os
+import time
 
-from ..client_s3 import get_s3_instance
-S3_INSTANCE = get_s3_instance()
+from ..client_s3 import get_s3_instance_plus
 
 
 class SaveVideoFilesS3:
     def __init__(self):
-        self.s3_output_dir = os.getenv("S3_OUTPUT_DIR")
         self.type = "output"
         self.prefix_append = ""
 
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {
-            "filename_prefix": ("STRING", {"default": "VideoFiles"}),
-            "filenames": ("VHS_FILENAMES", )
-            }}
+        return {
+            "required": {
+                # 功能参数相关
+                "filename_prefix": ("STRING", {"default": "VideoFiles"}),
+                "filenames": ("VHS_FILENAMES", ),
+
+                # s3 存储相关
+                "version": ("STRING", ),
+                "region": ("STRING", ),
+                "access_key": ("STRING", ),
+                "secret_key": ("STRING", ),
+                "bucket_name": ("STRING", ),
+                "endpoint_url": ("STRING", ),
+                "input_dir": ("STRING", ),
+                "output_dir": ("STRING", )
+            }
+        }
 
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("s3_video_paths",)
@@ -24,8 +36,27 @@ class SaveVideoFilesS3:
     OUTPUT_IS_LIST = (True,)
     CATEGORY = "ComfyS3Plus"
 
-    def save_video_files(self, filenames, filename_prefix="VideoFiles"):
-        filename_prefix += self.prefix_append
+    def save_video_files(
+        # base param
+        self,
+        filenames,
+        filename_prefix,
+
+        # s3 存储相关
+        version, region, access_key, secret_key, bucket_name,
+        endpoint_url, input_dir, output_dir
+    ):
+        S3_INSTANCE = get_s3_instance_plus(
+            version=version,
+            region=region,
+            access_key=access_key,
+            secret_key=secret_key,
+            bucket_name=bucket_name,
+            endpoint_url=endpoint_url,
+            input_dir=input_dir,
+            output_dir=output_dir
+        )
+        filename_prefix += f"{ self.prefix_append }{ int(round(time.time() * 1000)) }"
         local_files = filenames[1]
         full_output_folder, filename, counter, subfolder, filename_prefix = S3_INSTANCE.get_save_path(filename_prefix)
 

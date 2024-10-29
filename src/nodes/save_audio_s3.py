@@ -3,22 +3,31 @@ import os
 import io
 import tempfile
 import torchaudio
+import time
 
-from ..logger import logger
-from ..client_s3 import get_s3_instance
-S3_INSTANCE = get_s3_instance()
+from ..client_s3 import get_s3_instance_plus
 
 class SaveAudioS3:
     def __init__(self):
-        self.s3_output_dir = os.getenv("S3_OUTPUT_DIR")
         self.type = "output"
 
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": {
+                # 功能参数相关
                 "audio": ("AUDIO", ),
-                "filename_prefix": ("STRING", {"default": "Audio"})
+                "filename_prefix": ("STRING", {"default": "Audio"}),
+
+                # s3 存储相关
+                "version": ("STRING", ),
+                "region": ("STRING", ),
+                "access_key": ("STRING", ),
+                "secret_key": ("STRING", ),
+                "bucket_name": ("STRING", ),
+                "endpoint_url": ("STRING", ),
+                "input_dir": ("STRING", ),
+                "output_dir": ("STRING", )
             },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
@@ -30,8 +39,31 @@ class SaveAudioS3:
     OUTPUT_IS_LIST = (True,)
     CATEGORY = "ComfyS3Plus"
 
-    def save_audio(self, audio, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None):
-        filename_prefix += ""
+    def save_audio(
+        # base param
+        self, 
+        audio,
+        filename_prefix,
+
+        # s3 存储相关
+        version, region, access_key, secret_key, bucket_name,
+        endpoint_url, input_dir, output_dir,
+
+        # hidden param
+        prompt=None,
+        extra_pnginfo=None
+    ):
+        S3_INSTANCE = get_s3_instance_plus(
+            version=version,
+            region=region,
+            access_key=access_key,
+            secret_key=secret_key,
+            bucket_name=bucket_name,
+            endpoint_url=endpoint_url,
+            input_dir=input_dir,
+            output_dir=output_dir
+        )
+        filename_prefix += f"{ int(round(time.time() * 1000)) }"
         full_output_folder, filename, counter, subfolder, filename_prefix = S3_INSTANCE.get_save_path(filename_prefix)
         results = list()
         s3_audio_paths = list()

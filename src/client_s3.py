@@ -8,19 +8,26 @@ load_dotenv()
 
 
 class S3:
-    def __init__(self, region, access_key, secret_key, bucket_name, endpoint_url):
+    def __init__(
+        self, region,
+        access_key, secret_key,
+        bucket_name, endpoint_url,
+        input_dir, output_dir
+    ):
         self.region = region
         self.access_key = access_key
         self.secret_key = secret_key
         self.bucket_name = bucket_name
         self.endpoint_url = endpoint_url
         self.s3_client = self.get_client()
-        self.input_dir = os.getenv("S3_INPUT_DIR")
-        self.output_dir = os.getenv("S3_OUTPUT_DIR")
-        if not self.does_folder_exist(self.input_dir):
-            self.create_folder(self.input_dir)
-        if not self.does_folder_exist(self.output_dir):
-            self.create_folder(self.output_dir)
+        self.input_dir = input_dir
+        self.output_dir = output_dir
+
+        # 备注: 移除自检内容，减少时间消耗
+        # if not self.does_folder_exist(self.input_dir):
+        #     self.create_folder(self.input_dir)
+        # if not self.does_folder_exist(self.output_dir):
+        #     self.create_folder(self.output_dir)
 
     def get_client(self):
         if not all([self.region, self.access_key, self.secret_key, self.bucket_name]):
@@ -115,24 +122,26 @@ class S3:
         filename_prefix = compute_vars(filename_prefix, image_width, image_height)
         subfolder = os.path.dirname(os.path.normpath(filename_prefix))
         filename = os.path.basename(os.path.normpath(filename_prefix))
-        
+
         full_output_folder_s3 = os.path.join(self.output_dir, subfolder)
         
         # Check if the output folder exists, create it if it doesn't
         if not self.does_folder_exist(full_output_folder_s3):
             self.create_folder(full_output_folder_s3)
 
-        try:
-            # Continue with the counter calculation
-            files = self.get_files(full_output_folder_s3)
-            counter = max(
-                filter(
-                    lambda a: a[1][:-1] == filename and a[1][-1] == "_",
-                    map(map_filename, files)
-                )
-            )[0] + 1
-        except (ValueError, KeyError):
-            counter = 1
+        counter = 1
+        # 下述处理极其耗时，这里不再使用，采用另外的机制避免文件重名
+        # try:
+        #     # Continue with the counter calculation
+        #     files = self.get_files(full_output_folder_s3)
+        #     counter = max(
+        #         filter(
+        #             lambda a: a[1][:-1] == filename and a[1][-1] == "_",
+        #             map(map_filename, files)
+        #         )
+        #     )[0] + 1
+        # except (ValueError, KeyError):
+        #     counter = 1
         
         return full_output_folder_s3, filename, counter, subfolder, filename_prefix
 
@@ -144,9 +153,39 @@ def get_s3_instance():
             access_key=os.getenv("S3_ACCESS_KEY"),
             secret_key=os.getenv("S3_SECRET_KEY"),
             bucket_name=os.getenv("S3_BUCKET_NAME"),
-            endpoint_url=os.getenv("S3_ENDPOINT_URL")
+            endpoint_url=os.getenv("S3_ENDPOINT_URL"),
+            input_dir=os.getenv("S3_INPUT_DIR"),
+            output_dir=os.getenv("S3_OUTPUT_DIR")
         )
         return s3_instance
+    except Exception as e:
+        err = f"Failed to create S3 instance: {e} Please check your environment variables."
+        logger.error(err)
+
+# 全局字典用于存储不同版本的 S3 实例
+_s3_instances = {}
+def get_s3_instance_plus(
+    version, region,
+    access_key, secret_key,
+    bucket_name, endpoint_url,
+    input_dir, output_dir
+):
+    try:
+        # 检查是否已存在相同版本的实例
+        if version in _s3_instances:
+            return _s3_instances[version]
+        else:
+            s3_instance = S3(
+                region=region,
+                access_key=access_key,
+                secret_key=secret_key,
+                bucket_name=bucket_name,
+                endpoint_url=endpoint_url,
+                input_dir=input_dir,
+                output_dir=output_dir
+            )
+            _s3_instances[version] = s3_instance
+            return s3_instance
     except Exception as e:
         err = f"Failed to create S3 instance: {e} Please check your environment variables."
         logger.error(err)
