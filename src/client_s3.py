@@ -11,8 +11,7 @@ class S3:
     def __init__(
         self, region,
         access_key, secret_key,
-        bucket_name, endpoint_url,
-        input_dir, output_dir
+        bucket_name, endpoint_url, output_dir
     ):
         self.region = region
         self.access_key = access_key
@@ -20,12 +19,9 @@ class S3:
         self.bucket_name = bucket_name
         self.endpoint_url = endpoint_url
         self.s3_client = self.get_client()
-        self.input_dir = input_dir
         self.output_dir = output_dir
 
         # 备注: 移除自检内容，减少时间消耗
-        # if not self.does_folder_exist(self.input_dir):
-        #     self.create_folder(self.input_dir)
         # if not self.does_folder_exist(self.output_dir):
         #     self.create_folder(self.output_dir)
 
@@ -154,7 +150,6 @@ def get_s3_instance():
             secret_key=os.getenv("S3_SECRET_KEY"),
             bucket_name=os.getenv("S3_BUCKET_NAME"),
             endpoint_url=os.getenv("S3_ENDPOINT_URL"),
-            input_dir=os.getenv("S3_INPUT_DIR"),
             output_dir=os.getenv("S3_OUTPUT_DIR")
         )
         return s3_instance
@@ -168,7 +163,7 @@ def get_s3_instance_plus(
     version, region,
     access_key, secret_key,
     bucket_name, endpoint_url,
-    input_dir, output_dir
+    output_dir
 ):
     if endpoint_url == "":
         endpoint_url = None
@@ -183,7 +178,6 @@ def get_s3_instance_plus(
                 secret_key=secret_key,
                 bucket_name=bucket_name,
                 endpoint_url=endpoint_url,
-                input_dir=input_dir,
                 output_dir=output_dir
             )
             _s3_instances[version] = s3_instance

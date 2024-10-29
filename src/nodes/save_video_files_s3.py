@@ -24,7 +24,6 @@ class SaveVideoFilesS3:
                 "secret_key": ("STRING", ),
                 "bucket_name": ("STRING", ),
                 "endpoint_url": ("STRING", ),
-                "input_dir": ("STRING", ),
                 "output_dir": ("STRING", )
             }
         }
@@ -44,7 +43,7 @@ class SaveVideoFilesS3:
 
         # s3 存储相关
         version, region, access_key, secret_key, bucket_name,
-        endpoint_url, input_dir, output_dir
+        endpoint_url, output_dir
     ):
         S3_INSTANCE = get_s3_instance_plus(
             version=version,
@@ -53,7 +52,6 @@ class SaveVideoFilesS3:
             secret_key=secret_key,
             bucket_name=bucket_name,
             endpoint_url=endpoint_url,
-            input_dir=input_dir,
             output_dir=output_dir
         )
         filename_prefix += f"{ self.prefix_append }{ int(round(time.time() * 1000)) }"

@@ -26,7 +26,6 @@ class SaveAudioS3:
                 "secret_key": ("STRING", ),
                 "bucket_name": ("STRING", ),
                 "endpoint_url": ("STRING", ),
-                "input_dir": ("STRING", ),
                 "output_dir": ("STRING", )
             },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
@@ -47,7 +46,7 @@ class SaveAudioS3:
 
         # s3 存储相关
         version, region, access_key, secret_key, bucket_name,
-        endpoint_url, input_dir, output_dir,
+        endpoint_url, output_dir,
 
         # hidden param
         prompt=None,
@@ -60,7 +59,6 @@ class SaveAudioS3:
             secret_key=secret_key,
             bucket_name=bucket_name,
             endpoint_url=endpoint_url,
-            input_dir=input_dir,
             output_dir=output_dir
         )
         filename_prefix += f"{ int(round(time.time() * 1000)) }"
