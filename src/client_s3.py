@@ -170,6 +170,8 @@ def get_s3_instance_plus(
     bucket_name, endpoint_url,
     input_dir, output_dir
 ):
+    if endpoint_url == "":
+        endpoint_url = None
     try:
         # 检查是否已存在相同版本的实例
         if version in _s3_instances:
