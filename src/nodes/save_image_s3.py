@@ -75,15 +75,9 @@ class SaveImageS3:
         for image in images:
             i = 255. * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
-            metadata = None
-            if not args.disable_metadata:
-                metadata = PngInfo()
-                if prompt is not None:
-                    metadata.add_text("prompt", json.dumps(prompt))
-                if extra_pnginfo is not None:
-                    for x in extra_pnginfo:
-                        metadata.add_text(x, json.dumps(extra_pnginfo[x]))
             
+            # 设定最终存入图片的 metadata 为 None，避免 workflow 中的敏感信息泄漏
+            metadata = None
             file = f"{filename}_{counter:05}_.png"
             temp_file = None
             try:
